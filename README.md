@@ -90,6 +90,50 @@ If you find any updates pending, run this command to install them.
    php artisan migrate
    ```
 
+## Filament Admin Panel
+
+FS PBX now includes a modern admin panel built with [Filament](https://filamentphp.com/) for streamlined system management.
+
+### Accessing the Admin Panel
+
+After installation, the Filament admin panel is available at:
+```
+https://your-domain.com/admin
+```
+
+### Creating an Admin User
+
+To create an admin user for the Filament panel:
+
+```bash
+cd /path/to/your/fspbx  # Replace with your actual installation path
+php artisan make:filament-user
+```
+
+Follow the prompts to enter:
+- Name
+- Email address  
+- Password
+
+### Features
+
+The Filament admin panel provides:
+- Modern, intuitive interface
+- User management
+- System configuration
+- Real-time dashboard
+- Easy extensibility for custom resources
+
+### Laravel 12 Upgrade
+
+FS PBX has been upgraded to **Laravel 12** for improved performance, security, and modern PHP 8.2+ features. The upgrade includes:
+- PHP 8.2+ requirement
+- Updated dependencies for Laravel 12 compatibility
+- Path-agnostic installation (works from any directory)
+- Enhanced security and performance
+
+For more details on the Laravel 12 upgrade, see the [upgrade notes](UPGRADE.md).
+
 ## Premium Modules
 Unlock the full potential of your PBX with our two exciting premium modules designed to take your system to the next level:
 
