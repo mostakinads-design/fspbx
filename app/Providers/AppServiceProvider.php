@@ -50,7 +50,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        Sanctum::ignoreMigrations();
+        // Sanctum::ignoreMigrations(); // TODO: Update for Laravel 12/Sanctum 4.0
     }
 
     /**
