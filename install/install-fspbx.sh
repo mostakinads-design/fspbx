@@ -13,6 +13,20 @@ print_error() {
     echo -e "\e[31m$1 \e[0m"  # Red text
 }
 
+# Function to display usage
+usage() {
+    echo "Usage: $0 [INSTALL_DIR]"
+    echo ""
+    echo "Arguments:"
+    echo "  INSTALL_DIR  - Installation directory (default: /var/www/fspbx)"
+    echo ""
+    echo "Examples:"
+    echo "  $0                    # Install to /var/www/fspbx"
+    echo "  $0 /var/www/pbx       # Install to /var/www/pbx"
+    echo "  $0 /opt/fspbx         # Install to /opt/fspbx"
+    exit 1
+}
+
 # Detect OS codename
 
 OS_CODENAME=$(lsb_release -sc 2>/dev/null || echo "")
@@ -37,12 +51,13 @@ if ! command -v sudo &> /dev/null; then
     print_success "Sudo installed successfully."
 fi
 
-# Define variables
-INSTALL_DIR="/var/www/fspbx"
+# Define variables - Allow custom installation directory
+INSTALL_DIR="${1:-/var/www/fspbx}"  # Use first argument or default to /var/www/fspbx
 PUBLIC_DIR="$INSTALL_DIR/public"
-BACKUP_DIR="/var/www/fspbx_backup_$(date +%Y%m%d_%H%M%S)"
+BACKUP_DIR="${INSTALL_DIR}_backup_$(date +%Y%m%d_%H%M%S)"
 export PHP_VERSION="8.1"
 export FREESWITCH_VERSION="v1.10"
+export INSTALL_DIR  # Export for use by sub-scripts
 
 #Set Postgres Version
 if [[ "$OS_CODENAME" == "bookworm" ]]; then
@@ -66,6 +81,11 @@ print_success "Latest FusionPBX version: $FUSIONPBX_VERSION"
 
 # Construct the download URL
 FUSIONPBX_RELEASE="https://github.com/nemerald-voip/fusionpbx/archive/refs/tags/${FUSIONPBX_VERSION}.tar.gz"
+
+# Display installation directory
+print_success "==========================================="
+print_success "Installation Directory: $INSTALL_DIR"
+print_success "==========================================="
 
 # Backup existing installation if the directory is not empty
 if [ -d "$INSTALL_DIR" ] && [ "$(ls -A $INSTALL_DIR 2>/dev/null)" ]; then

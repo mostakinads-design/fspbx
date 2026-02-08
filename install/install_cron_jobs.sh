@@ -10,6 +10,12 @@ print_error() {
     echo "\033[31m$1 \033[0m"  # Red text
 }
 
+# Auto-detect installation directory if not set
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+INSTALL_DIR="${INSTALL_DIR:-$(dirname "$SCRIPT_DIR")}"
+
+echo "Using installation directory: $INSTALL_DIR"
+
 # Check if cron is installed, if not, install it
 if ! command -v crontab >/dev/null 2>&1; then
     echo "Cron is not installed. Installing..."
@@ -18,9 +24,9 @@ if ! command -v crontab >/dev/null 2>&1; then
     systemctl start cron
 fi
 
-# Define the cron job entries as a string
+# Define the cron job entries as a string (using detected installation directory)
 CRON_JOBS="
-* * * * * cd /var/www/fspbx && php artisan schedule:run >> /dev/null 2>&1
+* * * * * cd $INSTALL_DIR && php artisan schedule:run >> /dev/null 2>&1
 "
 
 # Define the cron job entries to remove (regex pattern matching)

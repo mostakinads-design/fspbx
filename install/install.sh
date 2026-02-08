@@ -10,6 +10,37 @@ print_error() {
     echo -e "\e[31m$1 \e[0m"  # Red text
 }
 
+# Function to process configuration templates
+# Usage: process_template <template_file> <output_file>
+process_template() {
+    local template_file="$1"
+    local output_file="$2"
+    
+    if [ ! -f "$template_file" ]; then
+        print_error "Template file not found: $template_file"
+        return 1
+    fi
+    
+    sed "s|__INSTALL_DIR__|$INSTALL_DIR|g" "$template_file" > "$output_file"
+    
+    if [ $? -eq 0 ]; then
+        print_success "Processed template: $template_file -> $output_file"
+        return 0
+    else
+        print_error "Failed to process template: $template_file"
+        return 1
+    fi
+}
+
+# Auto-detect installation directory
+# This script should be located in the install/ subdirectory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+INSTALL_DIR="${INSTALL_DIR:-$(dirname "$SCRIPT_DIR")}"  # Use exported INSTALL_DIR or detect from script location
+
+print_success "==========================================="
+print_success "Installation Directory: $INSTALL_DIR"
+print_success "==========================================="
+
 # Detect OS codename
 OS_CODENAME=$(lsb_release -sc 2>/dev/null || echo "")
 echo "Detected OS_CODENAME=$OS_CODENAME"
@@ -104,7 +135,7 @@ fi
     fi
 
 print_success "Configuring IPTables firewall rules..."
-bash /var/www/fspbx/install/configure_iptables.sh
+bash $INSTALL_DIR/install/configure_iptables.sh
 if [ $? -eq 0 ]; then
     print_success "IPTables configured successfully."
 else
@@ -113,7 +144,7 @@ else
 fi
 
 print_success "Installing Sngrep..."
-bash /var/www/fspbx/install/install_sngrep.sh
+bash $INSTALL_DIR/install/install_sngrep.sh
 if [ $? -eq 0 ]; then
     print_success "Sngrep installed successfully."
 else
@@ -122,7 +153,7 @@ else
 fi
 
 print_success "Installing PHP..."
-bash /var/www/fspbx/install/install_php.sh
+bash $INSTALL_DIR/install/install_php.sh
 if [ $? -eq 0 ]; then
     print_success "PHP installed successfully."
 else
@@ -205,7 +236,7 @@ else
 fi
 
 # Include the install_esl_extension.sh script
-sh /var/www/fspbx/install/install_esl_extension.sh
+sh $INSTALL_DIR/install/install_esl_extension.sh
 if [ $? -eq 0 ]; then
     print_success "ESL extension installation script executed successfully."
 else
@@ -214,7 +245,7 @@ else
 fi
 
 # Include the install_cron_jobs.sh script
-sh /var/www/fspbx/install/install_cron_jobs.sh
+sh $INSTALL_DIR/install/install_cron_jobs.sh
 if [ $? -eq 0 ]; then
     print_success "Cron bob installation script executed successfully."
 else
@@ -223,7 +254,7 @@ else
 fi
 
 # Include the add_web_server_to_sudoers.sh script
-sh /var/www/fspbx/install/add_web_server_to_sudoers.sh
+sh $INSTALL_DIR/install/add_web_server_to_sudoers.sh
 if [ $? -eq 0 ]; then
     print_success "add_web_server_to_sudoers.sh script executed successfully."
 else
@@ -296,16 +327,16 @@ else
 fi
 
 # Change to the FS PBX directory
-cd /var/www/fspbx/
+cd $INSTALL_DIR/
 if [ $? -eq 0 ]; then
-    print_success "Changed to /var/www/fspbx/ directory."
+    print_success "Changed to $INSTALL_DIR/ directory."
 else
-    print_error "Error occurred while changing directory to /var/www/fspbx/."
+    print_error "Error occurred while changing directory to $INSTALL_DIR/."
     exit 1
 fi
 
 print_success "Installing Nginx..."
-bash /var/www/fspbx/install/install_nginx.sh
+bash $INSTALL_DIR/install/install_nginx.sh
 if [ $? -eq 0 ]; then
     print_success "Nginx installed successfully."
 else
@@ -436,7 +467,7 @@ chown -R www-data:www-data /var/cache/fusionpbx
 print_success "FusionPBX cache directory setup completed."
 
 print_success "Installing FS PBX Apps..."
-bash /var/www/fspbx/install/install_fusionpbx_apps.sh
+bash $INSTALL_DIR/install/install_fusionpbx_apps.sh
 if [ $? -eq 0 ]; then
     print_success "FS PBX Apps installed successfully."
 else
@@ -501,7 +532,7 @@ else
 fi
 
 print_success "Installing FreeSWITCH..."
-bash /var/www/fspbx/install/install_freeswitch.sh
+bash $INSTALL_DIR/install/install_freeswitch.sh
 if [ $? -eq 0 ]; then
     print_success "FreeSWITCH installed successfully."
 else
@@ -511,7 +542,7 @@ fi
 
 
 print_success "Installing FreeSWITCH Sounds..."
-bash /var/www/fspbx/install/install_freeswitch_sounds.sh
+bash $INSTALL_DIR/install/install_freeswitch_sounds.sh
 if [ $? -eq 0 ]; then
     print_success "FreeSWITCH sounds installed successfully."
 else
@@ -520,7 +551,7 @@ else
 fi
 
 print_success "Installing Fail2Ban and securing Nginx..."
-bash /var/www/fspbx/install/install_fail2ban.sh
+bash $INSTALL_DIR/install/install_fail2ban.sh
 if [ $? -eq 0 ]; then
     print_success "Fail2Ban installed and configured successfully."
 else
@@ -535,7 +566,7 @@ if [ ! -d "/etc/fusionpbx" ]; then
 fi
 
 # Copy the fusionpbx_config.conf file to /etc/fusionpbx
-sudo cp /var/www/fspbx/install/fusionpbx_config.conf /etc/fusionpbx/config.conf
+sudo cp $INSTALL_DIR/install/fusionpbx_config.conf /etc/fusionpbx/config.conf
 if [ $? -eq 0 ]; then
     print_success "Copied fusionpbx_config.conf to /etc/fusionpbx successfully."
 else
@@ -544,7 +575,7 @@ else
 fi
 
 print_success "Installing PostgreSQL..."
-bash /var/www/fspbx/install/install_postgresql.sh
+bash $INSTALL_DIR/install/install_postgresql.sh
 if [ $? -eq 0 ]; then
     print_success "PostgreSQL installed successfully."
 else
@@ -553,7 +584,7 @@ else
 fi
 
 # Update document root in config.conf
-sudo sed -i 's|document.root = /var/www/fusionpbx|document.root = /var/www/fspbx/public|' /etc/fusionpbx/config.conf
+sudo sed -i 's|document.root = /var/www/fusionpbx|document.root = $INSTALL_DIR/public|' /etc/fusionpbx/config.conf
 if [ $? -eq 0 ]; then
     print_success "Updated document root in config.conf successfully."
 else
@@ -567,7 +598,7 @@ DB_USERNAME=$(grep '^database.0.username' /etc/fusionpbx/config.conf | cut -d ' 
 DB_PASSWORD=$(grep '^database.0.password' /etc/fusionpbx/config.conf | cut -d ' ' -f 3)
 
 # Update .env file with database credentials
-sudo sed -i "s|^DB_DATABASE=.*|DB_DATABASE=$DB_NAME|" /var/www/fspbx/.env
+sudo sed -i "s|^DB_DATABASE=.*|DB_DATABASE=$DB_NAME|" $INSTALL_DIR/.env
 if [ $? -eq 0 ]; then
     print_success "Updated DB_DATABASE in .env file successfully."
 else
@@ -575,7 +606,7 @@ else
     exit 1
 fi
 
-sudo sed -i "s|^DB_USERNAME=.*|DB_USERNAME=$DB_USERNAME|" /var/www/fspbx/.env
+sudo sed -i "s|^DB_USERNAME=.*|DB_USERNAME=$DB_USERNAME|" $INSTALL_DIR/.env
 if [ $? -eq 0 ]; then
     print_success "Updated DB_USERNAME in .env file successfully."
 else
@@ -583,7 +614,7 @@ else
     exit 1
 fi
 
-sudo sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=$DB_PASSWORD|" /var/www/fspbx/.env
+sudo sed -i "s|^DB_PASSWORD=.*|DB_PASSWORD=$DB_PASSWORD|" $INSTALL_DIR/.env
 if [ $? -eq 0 ]; then
     print_success "Updated DB_PASSWORD in .env file successfully."
 else
@@ -602,7 +633,7 @@ else
 fi
 
 # Update APP_URL in .env file with external IP
-sudo sed -i "s|^APP_URL=.*|APP_URL=https://$EXTERNAL_IP|" /var/www/fspbx/.env
+sudo sed -i "s|^APP_URL=.*|APP_URL=https://$EXTERNAL_IP|" $INSTALL_DIR/.env
 if [ $? -eq 0 ]; then
     print_success "Updated APP_URL in .env file successfully."
 else
@@ -611,7 +642,7 @@ else
 fi
 
 # Update SESSION_DOMAIN in .env file with external IP
-sudo sed -i "s|^SESSION_DOMAIN=.*|SESSION_DOMAIN=$EXTERNAL_IP|" /var/www/fspbx/.env
+sudo sed -i "s|^SESSION_DOMAIN=.*|SESSION_DOMAIN=$EXTERNAL_IP|" $INSTALL_DIR/.env
 if [ $? -eq 0 ]; then
     print_success "Updated SESSION_DOMAIN in .env file successfully."
 else
@@ -620,7 +651,7 @@ else
 fi
 
 # Update SANCTUM_STATEFUL_DOMAINS in .env file with external IP
-sudo sed -i "s|^SANCTUM_STATEFUL_DOMAINS=.*|SANCTUM_STATEFUL_DOMAINS=$EXTERNAL_IP|" /var/www/fspbx/.env
+sudo sed -i "s|^SANCTUM_STATEFUL_DOMAINS=.*|SANCTUM_STATEFUL_DOMAINS=$EXTERNAL_IP|" $INSTALL_DIR/.env
 if [ $? -eq 0 ]; then
     print_success "Updated SANCTUM_STATEFUL_DOMAINS in .env file successfully."
 else
@@ -639,7 +670,7 @@ else
 fi
 
 # Copy assets to storage/app/public
-sudo cp /var/www/fspbx/install/assets/* /var/www/fspbx/storage/app/public/
+sudo cp $INSTALL_DIR/install/assets/* $INSTALL_DIR/storage/app/public/
 if [ $? -eq 0 ]; then
     print_success "Assets copied to storage/app/public successfully."
 else
@@ -649,16 +680,16 @@ fi
 
 
 # Change ownership of the entire fspbx directory to www-data
-sudo chown -R www-data:www-data /var/www/fspbx
+sudo chown -R www-data:www-data $INSTALL_DIR
 if [ $? -eq 0 ]; then
-    print_success "Ownership of /var/www/fspbx and its contents changed to www-data successfully."
+    print_success "Ownership of $INSTALL_DIR and its contents changed to www-data successfully."
 else
-    print_error "Error occurred while changing ownership of /var/www/fspbx."
+    print_error "Error occurred while changing ownership of $INSTALL_DIR."
     exit 1
 fi
 
 # Set directory permissions to 755
-sudo find /var/www/fspbx -type d -exec chmod 755 {} \;
+sudo find $INSTALL_DIR -type d -exec chmod 755 {} \;
 if [ $? -eq 0 ]; then
     print_success "All directories set to 755 permissions successfully."
 else
@@ -667,7 +698,7 @@ else
 fi
 
 # Set file permissions to 644
-sudo find /var/www/fspbx -type f -exec chmod 644 {} \;
+sudo find $INSTALL_DIR -type f -exec chmod 644 {} \;
 if [ $? -eq 0 ]; then
     print_success "All files set to 644 permissions successfully."
 else
@@ -676,7 +707,7 @@ else
 fi
 
 # Change group ownership to www-data for storage and bootstrap/cache
-sudo chgrp -R www-data /var/www/fspbx/storage /var/www/fspbx/bootstrap/cache
+sudo chgrp -R www-data $INSTALL_DIR/storage $INSTALL_DIR/bootstrap/cache
 if [ $? -eq 0 ]; then
     print_success "Group ownership of storage and bootstrap/cache changed to www-data successfully."
 else
@@ -685,7 +716,7 @@ else
 fi
 
 # Set permissions to ug+rwx for storage and bootstrap/cache
-sudo chmod -R ug+rwx /var/www/fspbx/storage /var/www/fspbx/bootstrap/cache
+sudo chmod -R ug+rwx $INSTALL_DIR/storage $INSTALL_DIR/bootstrap/cache
 if [ $? -eq 0 ]; then
     print_success "Permissions set to ug+rwx for storage and bootstrap/cache successfully."
 else
@@ -693,18 +724,18 @@ else
     exit 1
 fi
 
-# Set /var/www/fspbx as a safe directory for Git
-sudo git config --global --add safe.directory /var/www/fspbx
+# Set $INSTALL_DIR as a safe directory for Git
+sudo git config --global --add safe.directory $INSTALL_DIR
 if [ $? -eq 0 ]; then
-    print_success "/var/www/fspbx added to Git's safe.directory list."
+    print_success "$INSTALL_DIR added to Git's safe.directory list."
 else
-    print_error "Error occurred while adding /var/www/fspbx to Git's safe.directory list."
+    print_error "Error occurred while adding $INSTALL_DIR to Git's safe.directory list."
     exit 1
 fi
 
 # Update settings for email_queue service
 # Copy email_queue service file
-sudo cp /var/www/fspbx/public/app/email_queue/resources/service/debian.service /etc/systemd/system/email_queue.service
+sudo cp $INSTALL_DIR/public/app/email_queue/resources/service/debian.service /etc/systemd/system/email_queue.service
 if [ $? -eq 0 ]; then
     print_success "email_queue service file copied successfully."
 else
@@ -713,7 +744,7 @@ else
 fi
 
 # Update settings for email_queue service
-sudo sed -i "s|WorkingDirectory=/var/www/fusionpbx|WorkingDirectory=/var/www/fspbx/public|" /etc/systemd/system/email_queue.service
+sudo sed -i "s|WorkingDirectory=/var/www/fusionpbx|WorkingDirectory=$INSTALL_DIR/public|" /etc/systemd/system/email_queue.service
 if [ $? -eq 0 ]; then
     print_success "Updated WorkingDirectory for email_queue service successfully."
 else
@@ -721,7 +752,7 @@ else
     exit 1
 fi
 
-sudo sed -i "s|ExecStart=/usr/bin/php /var/www/fusionpbx/app/email_queue/resources/service/email_queue.php|ExecStart=/usr/bin/php /var/www/fspbx/public/app/email_queue/resources/service/email_queue.php|" /etc/systemd/system/email_queue.service
+sudo sed -i "s|ExecStart=/usr/bin/php /var/www/fusionpbx/app/email_queue/resources/service/email_queue.php|ExecStart=/usr/bin/php $INSTALL_DIR/public/app/email_queue/resources/service/email_queue.php|" /etc/systemd/system/email_queue.service
 if [ $? -eq 0 ]; then
     print_success "Updated ExecStart for email_queue service successfully."
 else
@@ -731,7 +762,7 @@ fi
 
 # Update settings for fax_queue service
 # Copy fax_queue service file
-sudo cp /var/www/fspbx/public/app/fax_queue/resources/service/debian.service /etc/systemd/system/fax_queue.service
+sudo cp $INSTALL_DIR/public/app/fax_queue/resources/service/debian.service /etc/systemd/system/fax_queue.service
 if [ $? -eq 0 ]; then
     print_success "fax_queue service file copied successfully."
 else
@@ -757,7 +788,7 @@ else
     exit 1
 fi
 
-sudo sed -i "s|WorkingDirectory=/var/www/fusionpbx|WorkingDirectory=/var/www/fspbx/public|" /etc/systemd/system/fax_queue.service
+sudo sed -i "s|WorkingDirectory=/var/www/fusionpbx|WorkingDirectory=$INSTALL_DIR/public|" /etc/systemd/system/fax_queue.service
 if [ $? -eq 0 ]; then
     print_success "Updated WorkingDirectory for fax_queue service successfully."
 else
@@ -765,7 +796,7 @@ else
     exit 1
 fi
 
-sudo sed -i "s|ExecStart=/usr/bin/php /var/www/fusionpbx/app/fax_queue/resources/service/fax_queue.php|ExecStart=/usr/bin/php /var/www/fspbx/public/app/fax_queue/resources/service/fax_queue.php|" /etc/systemd/system/fax_queue.service
+sudo sed -i "s|ExecStart=/usr/bin/php /var/www/fusionpbx/app/fax_queue/resources/service/fax_queue.php|ExecStart=/usr/bin/php $INSTALL_DIR/public/app/fax_queue/resources/service/fax_queue.php|" /etc/systemd/system/fax_queue.service
 if [ $? -eq 0 ]; then
     print_success "Updated ExecStart for fax_queue service successfully."
 else
@@ -775,7 +806,7 @@ fi
 
 # Update settings for event_guard service
 # Copy event_guard service file
-sudo cp /var/www/fspbx/public/app/event_guard/resources/service/debian.service /etc/systemd/system/event_guard.service
+sudo cp $INSTALL_DIR/public/app/event_guard/resources/service/debian.service /etc/systemd/system/event_guard.service
 if [ $? -eq 0 ]; then
     print_success "event_guard service file copied successfully."
 else
@@ -784,7 +815,7 @@ else
 fi
 
 # Update settings for event_guard service
-sudo sed -i "s|WorkingDirectory=/var/www/fusionpbx|WorkingDirectory=/var/www/fspbx/public|" /etc/systemd/system/event_guard.service
+sudo sed -i "s|WorkingDirectory=/var/www/fusionpbx|WorkingDirectory=$INSTALL_DIR/public|" /etc/systemd/system/event_guard.service
 if [ $? -eq 0 ]; then
     print_success "Updated WorkingDirectory for event_guard service successfully."
 else
@@ -792,7 +823,7 @@ else
     exit 1
 fi
 
-sudo sed -i "s|ExecStart=/usr/bin/php /var/www/fusionpbx/app/event_guard/resources/service/event_guard.php|ExecStart=/usr/bin/php /var/www/fspbx/public/app/event_guard/resources/service/event_guard.php|" /etc/systemd/system/event_guard.service
+sudo sed -i "s|ExecStart=/usr/bin/php /var/www/fusionpbx/app/event_guard/resources/service/event_guard.php|ExecStart=/usr/bin/php $INSTALL_DIR/public/app/event_guard/resources/service/event_guard.php|" /etc/systemd/system/event_guard.service
 if [ $? -eq 0 ]; then
     print_success "Updated ExecStart for event_guard service successfully."
 else
@@ -987,7 +1018,7 @@ fi
 
 print_success "Seeding the database and configuring FS PBX..."
 # Navigate to Laravel project directory
-cd /var/www/fspbx
+cd $INSTALL_DIR
 # Run Laravel's initial seed command
 php artisan fspbx:initial-seed
 
