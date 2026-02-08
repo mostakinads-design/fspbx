@@ -138,14 +138,6 @@ else
     exit 1
 fi
 
-sudo apt-get install -y php8.1-zip
-if [ $? -eq 0 ]; then
-    print_success "PHP 8.1-zip installed successfully."
-else
-    print_error "Error occurred during PHP 8.1-zip installation."
-    exit 1
-fi
-
 # Install predis (php-redis)
 apt -y install php8.1-redis
 if [ $? -eq 0 ]; then
