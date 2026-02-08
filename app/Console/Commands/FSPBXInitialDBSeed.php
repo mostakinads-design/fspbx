@@ -89,10 +89,10 @@ class FSPBXInitialDBSeed extends Command
         $this->createUserSettings($user, $domain->domain_uuid);
 
         // Create symlink if it doesn't exist
-        $this->createSymlink('/var/www/fspbx/resources/lua', '/usr/share/freeswitch/scripts/lua');
+        $this->createSymlink(base_path('resources/lua'), '/usr/share/freeswitch/scripts/lua');
 
         // Set proper ownership and permissions
-        $this->setOwnershipAndPermissions('/var/www/fspbx/resources/lua');
+        $this->setOwnershipAndPermissions(base_path('resources/lua'));
 
         // Step 6: Run Upgrade Defaults
         $this->runUpgradeDefaults();
@@ -169,21 +169,24 @@ class FSPBXInitialDBSeed extends Command
     private function runUpgradeSchema()
     {
         $this->info("Running upgrade schema script...");
-        shell_exec("cd /var/www/fspbx && php /var/www/fspbx/public/core/upgrade/upgrade_schema.php > /dev/null 2>&1");
+        $basePath = base_path();
+        shell_exec("cd $basePath && php $basePath/public/core/upgrade/upgrade_schema.php > /dev/null 2>&1");
         $this->info("Upgrade schema executed successfully.");
     }
 
     private function runUpgradeDefaults()
     {
         $this->info("Running upgrade defaults script...");
-        shell_exec("cd /var/www/fspbx && /usr/bin/php /var/www/fspbx/public/core/upgrade/upgrade.php > /dev/null 2>&1");
+        $basePath = base_path();
+        shell_exec("cd $basePath && /usr/bin/php $basePath/public/core/upgrade/upgrade.php > /dev/null 2>&1");
         $this->info("Upgrade defaults executed successfully.");
     }
 
     private function runUpgradeDomains()
     {
         $this->info("Running upgrade domains script...");
-        shell_exec("cd /var/www/fspbx/public && /usr/bin/php /var/www/fspbx/public/core/upgrade/upgrade_domains.php > /dev/null 2>&1");
+        $basePath = base_path();
+        shell_exec("cd $basePath/public && /usr/bin/php $basePath/public/core/upgrade/upgrade_domains.php > /dev/null 2>&1");
         $this->info("Upgrade domains executed successfully.");
     }
 

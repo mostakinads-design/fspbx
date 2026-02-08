@@ -19,8 +19,8 @@ print_success "Starting PHP Installation..."
 OS_CODENAME=$(lsb_release -cs)
 CPU_ARCHITECTURE=$(dpkg --print-architecture)
 
-# Set default PHP version to 8.1 if not set
-PHP_VERSION=${PHP_VERSION:-"8.1"}
+# Set default PHP version to 8.3 if not set
+PHP_VERSION=${PHP_VERSION:-"8.3"}
 
 print_success "Installing PHP version: $PHP_VERSION"
 
@@ -46,7 +46,8 @@ apt-get install -y --no-install-recommends \
     php$PHP_VERSION php$PHP_VERSION-common php$PHP_VERSION-cli php$PHP_VERSION-dev \
     php$PHP_VERSION-fpm php$PHP_VERSION-pgsql php$PHP_VERSION-sqlite3 php$PHP_VERSION-odbc \
     php$PHP_VERSION-curl php$PHP_VERSION-imap php$PHP_VERSION-xml php$PHP_VERSION-gd \
-    php$PHP_VERSION-mbstring php$PHP_VERSION-ldap php$PHP_VERSION-inotify
+    php$PHP_VERSION-mbstring php$PHP_VERSION-ldap php$PHP_VERSION-inotify php$PHP_VERSION-zip \
+    php$PHP_VERSION-bcmath php$PHP_VERSION-intl php$PHP_VERSION-soap
 
 # Set PHP configuration file path dynamically
 PHP_INI_FILE="/etc/php/$PHP_VERSION/fpm/php.ini"
@@ -71,10 +72,31 @@ print_success "Restarting PHP-FPM..."
 systemctl daemon-reload
 systemctl restart php$PHP_VERSION-fpm
 
+# Wait for PHP-FPM to fully start
 sleep 6
 
-mkdir -p /etc/systemd/system/php8.1-fpm.service.d
-cat > /etc/systemd/system/php8.1-fpm.service.d/override.conf << 'EOF'
+# Verify PHP extensions are loaded
+print_success "Verifying PHP extensions..."
+if php -m | grep -qi "^zip$"; then
+    print_success "✓ ZIP extension is loaded"
+else
+    print_error "✗ WARNING: ZIP extension not loaded!"
+fi
+
+if php -m | grep -qi "^xml$"; then
+    print_success "✓ XML extension is loaded"
+else
+    print_error "✗ WARNING: XML extension not loaded!"
+fi
+
+if php -m | grep -qi "^mbstring$"; then
+    print_success "✓ mbstring extension is loaded"
+else
+    print_error "✗ WARNING: mbstring extension not loaded!"
+fi
+
+mkdir -p /etc/systemd/system/php8.3-fpm.service.d
+cat > /etc/systemd/system/php8.3-fpm.service.d/override.conf << 'EOF'
 [Service]
 RuntimeDirectory=php
 RuntimeDirectoryMode=0755
@@ -83,3 +105,10 @@ EOF
 systemctl daemon-reload
 
 print_success "PHP $PHP_VERSION installation completed successfully!"
+
+# Final verification
+print_success "Installed PHP version:"
+php --version | head -n 1
+
+print_success "Critical extensions status:"
+php -m | grep -E "^(zip|xml|mbstring|curl|pdo)$" | sed 's/^/  ✓ /'

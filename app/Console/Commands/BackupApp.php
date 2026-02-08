@@ -91,7 +91,7 @@ class BackupApp extends Command
         // Paths to be backed up
         $directories = [
             '/var/www/freeswitchpbx',
-            '/var/www/fspbx',
+            base_path(), // Current Laravel installation path
             '/usr/share/freeswitch',
             '/etc/freeswitch',
             '/usr/share/fusionpbx/templates/provision',
@@ -109,7 +109,9 @@ class BackupApp extends Command
         $mainBackupFile = "$mainBackupDir/backup_$now.tgz";
 
         // Generate the tar command only for existing directories
-        $tarCommand = "tar --exclude='*/.git/*' --exclude='*/music/default/*' --exclude='*/june/*' --exclude='*/callie/*' --exclude='*/mario/*' --exclude='*/node_modules/*' --exclude='/var/www/freeswitchpbx/vendor' --exclude='/var/www/fspbx/vendor' -zvcf $mainBackupFile $backupFile " . implode(' ', $existingDirs);
+        // Exclude vendor and node_modules from backup
+        $excludeVendor = base_path('vendor');
+        $tarCommand = "tar --exclude='*/.git/*' --exclude='*/music/default/*' --exclude='*/june/*' --exclude='*/callie/*' --exclude='*/mario/*' --exclude='*/node_modules/*' --exclude='/var/www/freeswitchpbx/vendor' --exclude='$excludeVendor' -zvcf $mainBackupFile $backupFile " . implode(' ', $existingDirs);
 
         $this->info("Packaging the backup into $mainBackupFile...");
         $this->executeCommand($tarCommand);
