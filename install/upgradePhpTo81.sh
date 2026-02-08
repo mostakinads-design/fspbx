@@ -49,7 +49,7 @@ else
 fi
 
 # Install PHP 8.1
-apt-get install -y php8.1 php8.1-cli php8.1-dev php8.1-fpm php8.1-pgsql php8.1-sqlite3 php8.1-odbc php8.1-curl php8.1-imap php8.1-xml php8.1-gd php8.1-mbstring php8.1-ldap
+apt-get install -y php8.1 php8.1-cli php8.1-dev php8.1-fpm php8.1-pgsql php8.1-sqlite3 php8.1-odbc php8.1-curl php8.1-imap php8.1-xml php8.1-gd php8.1-mbstring php8.1-ldap php8.1-inotify php8.1-zip
 if [ $? -eq 0 ]; then
     print_success "PHP 8.1 installed successfully."
 else
@@ -62,14 +62,6 @@ if [ $? -eq 0 ]; then
     print_success "Imagemagick and PHP Imagick installed successfully."
 else
     print_error "Error occurred during Imagemagick and PHP Imagick installation."
-    exit 1
-fi
-
-sudo apt-get install -y php8.1-zip
-if [ $? -eq 0 ]; then
-    print_success "PHP 8.1-zip installed successfully."
-else
-    print_error "Error occurred during PHP 8.1-zip installation."
     exit 1
 fi
 
