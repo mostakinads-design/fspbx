@@ -32,6 +32,67 @@ process_template() {
     fi
 }
 
+# Function to verify PHP extensions are loaded
+# Usage: verify_php_extension <extension_name>
+verify_php_extension() {
+    local ext_name="$1"
+    
+    if php -m 2>/dev/null | grep -qi "^${ext_name}$"; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+# Function to verify critical PHP extensions
+verify_php_extensions() {
+    print_success "Verifying critical PHP extensions..."
+    
+    local required_extensions=("zip" "xml" "mbstring" "curl" "pdo" "pgsql")
+    local missing_extensions=()
+    
+    for ext in "${required_extensions[@]}"; do
+        if verify_php_extension "$ext"; then
+            print_success "✓ Extension '$ext' is loaded"
+        else
+            print_error "✗ Extension '$ext' is NOT loaded"
+            missing_extensions+=("$ext")
+        fi
+    done
+    
+    if [ ${#missing_extensions[@]} -gt 0 ]; then
+        print_error "Missing required PHP extensions: ${missing_extensions[*]}"
+        echo ""
+        print_error "To fix this issue, run:"
+        
+        # Detect PHP version
+        local php_ver=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;" 2>/dev/null || echo "8.3")
+        
+        for ext in "${missing_extensions[@]}"; do
+            case "$ext" in
+                "xml"|"dom")
+                    echo "  sudo apt-get install -y php${php_ver}-xml"
+                    ;;
+                "pdo"|"pgsql")
+                    echo "  sudo apt-get install -y php${php_ver}-pgsql"
+                    ;;
+                *)
+                    echo "  sudo apt-get install -y php${php_ver}-${ext}"
+                    ;;
+            esac
+        done
+        
+        echo ""
+        echo "  sudo systemctl restart php${php_ver}-fpm"
+        echo ""
+        
+        return 1
+    else
+        print_success "All required PHP extensions are loaded!"
+        return 0
+    fi
+}
+
 # Auto-detect installation directory
 # This script should be located in the install/ subdirectory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -189,6 +250,29 @@ fi
 # Detect PHP version if not set
 if [ -z "$PHP_VERSION" ]; then
     PHP_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
+fi
+
+# Restart PHP-FPM to ensure all extensions are loaded
+print_success "Restarting PHP-FPM to load all extensions..."
+systemctl restart php${PHP_VERSION}-fpm
+if [ $? -eq 0 ]; then
+    print_success "PHP-FPM restarted successfully."
+else
+    print_error "Warning: Could not restart PHP-FPM. Extensions may not be loaded."
+fi
+
+# Wait a moment for PHP-FPM to fully restart
+sleep 2
+
+# Verify that critical PHP extensions are loaded
+print_success "Verifying PHP extensions are loaded..."
+verify_php_extensions
+if [ $? -ne 0 ]; then
+    print_error "Critical PHP extensions are missing!"
+    print_error "Installation cannot continue without required extensions."
+    echo ""
+    print_error "Please install the missing extensions and restart PHP-FPM, then try again."
+    exit 1
 fi
 
 # Update PHP configuration settings in php.ini
@@ -487,7 +571,40 @@ else
     exit 1
 fi
 
+# Final verification before Composer install
+print_success "=========================================="
+print_success "Pre-Composer Installation Verification"
+print_success "=========================================="
+
+# Show PHP version
+PHP_VERSION_FULL=$(php -v | head -n 1)
+print_success "PHP Version: $PHP_VERSION_FULL"
+
+# Verify extensions one more time
+print_success "Checking PHP extensions before Composer installation..."
+verify_php_extensions
+
+if [ $? -ne 0 ]; then
+    print_error "Cannot proceed with Composer installation - required PHP extensions are missing!"
+    echo ""
+    print_error "Options:"
+    echo "  1. Fix the extensions using the commands shown above, then run:"
+    echo "     cd $INSTALL_DIR && composer install"
+    echo ""
+    echo "  2. Continue anyway (NOT RECOMMENDED):"
+    echo "     cd $INSTALL_DIR && composer install --ignore-platform-reqs"
+    echo ""
+    exit 1
+fi
+
+# Show loaded extensions for debugging
+print_success "Loaded PHP extensions:"
+php -m | head -20
+echo "... (showing first 20 extensions)"
+echo ""
+
 # Install Composer dependencies without interaction
+print_success "Installing Composer dependencies..."
 composer install --no-dev --prefer-dist --optimize-autoloader --no-progress --no-interaction
 if [ $? -eq 0 ]; then
     print_success "Composer dependencies installed successfully."

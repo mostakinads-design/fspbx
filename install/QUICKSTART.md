@@ -70,11 +70,51 @@ sudo bash install/install.sh
 
 ### ❌ Error: "ext-zip is missing"
 
+**This is the most common error!**
+
+**Symptoms:**
+- Error message: `You can also run Composer with --ignore-platform-req=ext-zip`
+- Composer fails during `composer install`
+- References to `/etc/php/8.2/cli/conf.d/` (old PHP version)
+
 **Fix:**
 ```bash
+# 1. Ensure PHP 8.3 is installed and active
+php --version  # Should show PHP 8.3.x
+
+# 2. Install php-zip extension
 sudo apt-get update
 sudo apt-get install -y php8.3-zip
+
+# 3. Restart PHP-FPM
 sudo systemctl restart php8.3-fpm
+
+# 4. Verify extension is loaded
+php -m | grep zip
+
+# 5. If still not showing, check all PHP CLI config
+php --ini
+
+# 6. Retry composer install
+cd /var/www/fspbx  # or your installation path
+composer install --no-dev --prefer-dist --optimize-autoloader
+```
+
+**Alternative fix if you have multiple PHP versions:**
+```bash
+# Remove old PHP versions
+sudo apt-get purge -y php8.1* php8.2*
+sudo apt-get autoremove -y
+
+# Reinstall PHP 8.3 cleanly
+sudo apt-get install -y php8.3 php8.3-zip php8.3-xml php8.3-mbstring php8.3-curl
+
+# Set default PHP version
+sudo update-alternatives --set php /usr/bin/php8.3
+
+# Verify
+php --version
+php -m | grep -E "zip|xml|mbstring"
 ```
 
 ### ❌ Error: "Composer installation failed"
