@@ -126,8 +126,8 @@ The Filament admin panel provides:
 
 ### Laravel 12 Upgrade
 
-FS PBX has been upgraded to **Laravel 12** for improved performance, security, and modern PHP 8.2+ features. The upgrade includes:
-- PHP 8.2+ requirement
+FS PBX has been upgraded to **Laravel 12** for improved performance, security, and modern PHP 8.3+ features. The upgrade includes:
+- PHP 8.3+ requirement (required for Filament 5)
 - Updated dependencies for Laravel 12 compatibility
 - Path-agnostic installation (works from any directory)
 - Enhanced security and performance

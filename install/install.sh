@@ -161,7 +161,7 @@ else
     exit 1
 fi
 
-sudo apt install -y imagemagick php8.1-imagick
+sudo apt install -y imagemagick php${PHP_VERSION}-imagick
 if [ $? -eq 0 ]; then
     print_success "Imagemagick and PHP Imagick installed successfully."
 else
@@ -169,16 +169,16 @@ else
     exit 1
 fi
 
-sudo apt-get install -y php8.1-zip
+sudo apt-get install -y php${PHP_VERSION}-zip
 if [ $? -eq 0 ]; then
-    print_success "PHP 8.1-zip installed successfully."
+    print_success "PHP ${PHP_VERSION}-zip installed successfully."
 else
-    print_error "Error occurred during PHP 8.1-zip installation."
+    print_error "Error occurred during PHP ${PHP_VERSION}-zip installation."
     exit 1
 fi
 
 # Install predis (php-redis)
-apt -y install php8.1-redis
+apt -y install php${PHP_VERSION}-redis
 if [ $? -eq 0 ]; then
     print_success "Predis (php-redis) installed successfully."
 else
@@ -186,8 +186,13 @@ else
     exit 1
 fi
 
+# Detect PHP version if not set
+if [ -z "$PHP_VERSION" ]; then
+    PHP_VERSION=$(php -r "echo PHP_MAJOR_VERSION.'.'.PHP_MINOR_VERSION;")
+fi
+
 # Update PHP configuration settings in php.ini
-sudo sed 's#post_max_size = .*#post_max_size = 80M#g' -i /etc/php/8.1/fpm/php.ini
+sudo sed 's#post_max_size = .*#post_max_size = 80M#g' -i /etc/php/${PHP_VERSION}/fpm/php.ini
 if [ $? -eq 0 ]; then
     print_success "post_max_size updated to 80M in php.ini."
 else
@@ -195,7 +200,7 @@ else
     exit 1
 fi
 
-sudo sed 's#upload_max_filesize = .*#upload_max_filesize = 80M#g' -i /etc/php/8.1/fpm/php.ini
+sudo sed 's#upload_max_filesize = .*#upload_max_filesize = 80M#g' -i /etc/php/${PHP_VERSION}/fpm/php.ini
 if [ $? -eq 0 ]; then
     print_success "upload_max_filesize updated to 80M in php.ini."
 else
@@ -203,7 +208,7 @@ else
     exit 1
 fi
 
-sudo sed 's#memory_limit = .*#memory_limit = 512M#g' -i /etc/php/8.1/fpm/php.ini
+sudo sed 's#memory_limit = .*#memory_limit = 512M#g' -i /etc/php/${PHP_VERSION}/fpm/php.ini
 if [ $? -eq 0 ]; then
     print_success "memory_limit updated to 512M in php.ini."
 else
@@ -211,7 +216,7 @@ else
     exit 1
 fi
 
-sudo sed 's#;max_input_vars = .*#max_input_vars = 8000#g' -i /etc/php/8.1/fpm/php.ini
+sudo sed 's#;max_input_vars = .*#max_input_vars = 8000#g' -i /etc/php/${PHP_VERSION}/fpm/php.ini
 if [ $? -eq 0 ]; then
     print_success "max_input_vars updated to 8000 in php.ini."
 else
@@ -219,7 +224,7 @@ else
     exit 1
 fi
 
-sudo sed 's#; max_input_vars = .*#max_input_vars = 8000#g' -i /etc/php/8.1/fpm/php.ini
+sudo sed 's#; max_input_vars = .*#max_input_vars = 8000#g' -i /etc/php/${PHP_VERSION}/fpm/php.ini
 if [ $? -eq 0 ]; then
     print_success "max_input_vars (with space) updated to 8000 in php.ini."
 else
@@ -227,7 +232,7 @@ else
     exit 1
 fi
 
-sudo sed -i 's/^\(;*\)\s*session.gc_maxlifetime\s*=.*/\1session.gc_maxlifetime = 7200/' /etc/php/8.1/fpm/php.ini
+sudo sed -i 's/^\(;*\)\s*session.gc_maxlifetime\s*=.*/\1session.gc_maxlifetime = 7200/' /etc/php/${PHP_VERSION}/fpm/php.ini
 if [ $? -eq 0 ]; then
     print_success "session.gc_maxlifetime updated to 7200 in php.ini."
 else
@@ -262,19 +267,16 @@ else
     exit 1
 fi
 
-# Install Composer
-curl -sS https://getcomposer.org/installer | php
+# Install Composer using dedicated script
+print_success "Installing Composer..."
+bash $INSTALL_DIR/install/install-composer.sh
 if [ $? -eq 0 ]; then
-    mv composer.phar /usr/local/bin/composer
-    chmod +x /usr/local/bin/composer
-    if [ $? -eq 0 ]; then
-        print_success "Composer installed successfully."
-    else
-        print_error "Error occurred while setting up Composer."
-        exit 1
-    fi
+    print_success "Composer installation completed successfully."
 else
-    print_error "Error occurred during Composer installation."
+    print_error "Error occurred while installing Composer."
+    print_info "You can try installing Composer manually:"
+    print_info "  cd $INSTALL_DIR"
+    print_info "  sudo bash install/install-composer.sh"
     exit 1
 fi
 

@@ -55,7 +55,7 @@ fi
 INSTALL_DIR="${1:-/var/www/fspbx}"  # Use first argument or default to /var/www/fspbx
 PUBLIC_DIR="$INSTALL_DIR/public"
 BACKUP_DIR="${INSTALL_DIR}_backup_$(date +%Y%m%d_%H%M%S)"
-export PHP_VERSION="8.1"
+export PHP_VERSION="8.3"
 export FREESWITCH_VERSION="v1.10"
 export INSTALL_DIR  # Export for use by sub-scripts
 

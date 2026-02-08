@@ -7,8 +7,9 @@ FS PBX has been upgraded from Laravel 10 to Laravel 12, bringing significant imp
 ## What's New in Laravel 12
 
 ### PHP Requirements
-- **Minimum PHP version**: 8.2 (upgraded from 8.1)
+- **Minimum PHP version**: 8.3 (upgraded from 8.2)
 - Better type safety and modern PHP features
+- Required for optimal Filament 5 performance
 
 ### Framework Updates
 - Laravel Framework: 12.x
@@ -98,7 +99,7 @@ npm run build
 ### 5. Restart Services
 ```bash
 # Restart PHP-FPM
-sudo systemctl restart php8.2-fpm
+sudo systemctl restart php8.3-fpm
 
 # Restart queue workers
 php artisan queue:restart
@@ -109,7 +110,7 @@ php artisan horizon:terminate
 
 ## Post-Upgrade Checklist
 
-- [ ] Verify PHP version is 8.2 or higher: `php --version`
+- [ ] Verify PHP version is 8.3 or higher: `php --version`
 - [ ] Check Laravel version: `php artisan --version`
 - [ ] Test main application functionality
 - [ ] Verify Filament admin panel is accessible at `/admin`
@@ -216,7 +217,7 @@ Laravel 12 brings several performance improvements:
 ## Security Enhancements
 
 - Updated dependencies address known vulnerabilities
-- PHP 8.2+ includes security improvements
+- PHP 8.3+ includes security improvements
 - Laravel 12 security patches
 - Updated Sanctum authentication
 

@@ -19,8 +19,8 @@ print_success "Starting PHP Installation..."
 OS_CODENAME=$(lsb_release -cs)
 CPU_ARCHITECTURE=$(dpkg --print-architecture)
 
-# Set default PHP version to 8.1 if not set
-PHP_VERSION=${PHP_VERSION:-"8.1"}
+# Set default PHP version to 8.3 if not set
+PHP_VERSION=${PHP_VERSION:-"8.3"}
 
 print_success "Installing PHP version: $PHP_VERSION"
 
@@ -46,7 +46,8 @@ apt-get install -y --no-install-recommends \
     php$PHP_VERSION php$PHP_VERSION-common php$PHP_VERSION-cli php$PHP_VERSION-dev \
     php$PHP_VERSION-fpm php$PHP_VERSION-pgsql php$PHP_VERSION-sqlite3 php$PHP_VERSION-odbc \
     php$PHP_VERSION-curl php$PHP_VERSION-imap php$PHP_VERSION-xml php$PHP_VERSION-gd \
-    php$PHP_VERSION-mbstring php$PHP_VERSION-ldap php$PHP_VERSION-inotify
+    php$PHP_VERSION-mbstring php$PHP_VERSION-ldap php$PHP_VERSION-inotify php$PHP_VERSION-zip \
+    php$PHP_VERSION-bcmath php$PHP_VERSION-intl php$PHP_VERSION-soap
 
 # Set PHP configuration file path dynamically
 PHP_INI_FILE="/etc/php/$PHP_VERSION/fpm/php.ini"
@@ -73,8 +74,8 @@ systemctl restart php$PHP_VERSION-fpm
 
 sleep 6
 
-mkdir -p /etc/systemd/system/php8.1-fpm.service.d
-cat > /etc/systemd/system/php8.1-fpm.service.d/override.conf << 'EOF'
+mkdir -p /etc/systemd/system/php8.3-fpm.service.d
+cat > /etc/systemd/system/php8.3-fpm.service.d/override.conf << 'EOF'
 [Service]
 RuntimeDirectory=php
 RuntimeDirectoryMode=0755
