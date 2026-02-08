@@ -73,10 +73,10 @@ After completing the installation steps, you can access the application at your 
 
 
 ## How to update
-Pull new updates and install them by running these commands:
+Pull new updates and install them by running these commands from your installation directory:
 
    ```bash
-   cd /var/www/fspbx
+   cd /path/to/your/fspbx  # Replace with your actual installation path (e.g., /var/www/fspbx or /var/www/pbx)
    git pull
    php artisan app:update
    ```

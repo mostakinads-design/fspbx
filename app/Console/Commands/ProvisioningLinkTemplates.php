@@ -13,136 +13,95 @@ class ProvisioningLinkTemplates extends Command
     public function handle(): int
     {
         $force = (bool) $this->option('force');
+        $basePath = base_path();
 
-        // Add more mappings here as needed
-        $mappings = [
-            [
-                'target' => '/var/www/fspbx/resources/provisioning/algo/8186',
-                'link'   => '/var/www/fspbx/public/resources/templates/provision/algo/8186',
-            ],
-            [
-                'target' => '/var/www/fspbx/resources/provisioning/algo/8188',
-                'link'   => '/var/www/fspbx/public/resources/templates/provision/algo/8188',
-            ],
-            [
-                'target' => '/var/www/fspbx/resources/provisioning/algo/8189',
-                'link'   => '/var/www/fspbx/public/resources/templates/provision/algo/8189',
-            ],
-            [
-                'target' => '/var/www/fspbx/resources/provisioning/algo/8196',
-                'link'   => '/var/www/fspbx/public/resources/templates/provision/algo/8196',
-            ],
-            [
-                'target' => '/var/www/fspbx/resources/provisioning/avaya',
-                'link'   => '/var/www/fspbx/public/resources/templates/provision/avaya',
-            ],
-            [
-                'target' => '/var/www/fspbx/resources/provisioning/cisco/8861',
-                'link'   => '/var/www/fspbx/public/resources/templates/provision/cisco/8861',
-            ],
-            [
-                'target' => '/var/www/fspbx/resources/provisioning/cisco/9861',
-                'link'   => '/var/www/fspbx/public/resources/templates/provision/cisco/9861',
-            ],
-            [
-                'target' => '/var/www/fspbx/resources/provisioning/fanvil/w611w',
-                'link'   => '/var/www/fspbx/public/resources/templates/provision/fanvil/w611w',
-            ],
-            [
-                'target' => '/var/www/fspbx/resources/provisioning/snom/C520',
-                'link'   => '/var/www/fspbx/public/resources/templates/provision/snom/C520',
-            ],
-            [
-                'target' => '/var/www/fspbx/resources/provisioning/snom/C620',
-                'link'   => '/var/www/fspbx/public/resources/templates/provision/snom/C620',
-            ],
-            [
-                'target' => '/var/www/fspbx/resources/provisioning/snom/D812',
-                'link'   => '/var/www/fspbx/public/resources/templates/provision/snom/D812',
-            ],
-            [
-                'target' => '/var/www/fspbx/resources/provisioning/snom/D815',
-                'link'   => '/var/www/fspbx/public/resources/templates/provision/snom/D815',
-            ],
-            [
-                'target' => '/var/www/fspbx/resources/provisioning/snom/D862',
-                'link'   => '/var/www/fspbx/public/resources/templates/provision/snom/D862',
-            ],
-            [
-                'target' => '/var/www/fspbx/resources/provisioning/snom/D865',
-                'link'   => '/var/www/fspbx/public/resources/templates/provision/snom/D865',
-            ],
-            [
-                'target' => '/var/www/fspbx/resources/provisioning/snom/PA1plus',
-                'link'   => '/var/www/fspbx/public/resources/templates/provision/snom/PA1plus',
-            ],
-            [
-                'target' => '/var/www/fspbx/resources/provisioning/grandstream/wp8x6',
-                'link'   => '/var/www/fspbx/public/resources/templates/provision/grandstream/wp8x6',
-            ],
-            [
-                'target' => '/var/www/fspbx/resources/provisioning/grandstream/wp826',
-                'link'   => '/var/www/fspbx/public/resources/templates/provision/grandstream/wp826',
-            ],
-            [
-                'target' => '/var/www/fspbx/resources/provisioning/yealink/ax83h',
-                'link'   => '/var/www/fspbx/public/resources/templates/provision/yealink/ax83h',
-            ],
-            [
-                'target' => '/var/www/fspbx/resources/provisioning/yealink/t34w',
-                'link'   => '/var/www/fspbx/public/resources/templates/provision/yealink/t34w',
-            ],
-            [
-                'target' => '/var/www/fspbx/resources/provisioning/yealink/w80',
-                'link'   => '/var/www/fspbx/public/resources/templates/provision/yealink/w80',
-            ],
-
-
+        // Define device mappings using relative paths that will work from any installation directory
+        $deviceMappings = [
+            'algo/8186',
+            'algo/8188',
+            'algo/8189',
+            'algo/8196',
+            'avaya',
+            'cisco/8861',
+            'cisco/9861',
+            'fanvil/w611w',
+            'snom/C520',
+            'snom/C620',
+            'snom/D812',
+            'snom/D815',
+            'snom/D862',
+            'snom/D865',
+            'snom/PA1plus',
+            'grandstream/wp8x6',
+            'grandstream/wp826',
+            'yealink/ax83h',
+            'yealink/t34w',
+            'yealink/w80',
         ];
 
+        $mappings = [];
+        foreach ($deviceMappings as $device) {
+            $mappings[] = [
+                'target' => "$basePath/resources/provisioning/$device",
+                'link'   => "$basePath/public/resources/templates/provision/$device",
+            ];
+        }
+
+        $successCount = 0;
+        $errorCount   = 0;
+
         foreach ($mappings as $map) {
-            $this->createSymlink($map['target'], $map['link'], $force);
-        }
+            $target = $map['target'];
+            $link   = $map['link'];
 
-        return self::SUCCESS;
-    }
-
-    protected function createSymlink(string $target, string $link, bool $force): void
-    {
-        // Validate target existence
-        if (!File::exists($target) || !File::isDirectory($target)) {
-            $this->warn("Skip: target not found or not a directory: $target");
-            return;
-        }
-
-        // Ensure parent directory for the link exists
-        File::ensureDirectoryExists(dirname($link), 0755, true);
-
-        // If correct symlink already exists, done
-        if (is_link($link) && readlink($link) === $target) {
-            $this->info("OK: symlink exists -> $link -> $target");
-            return;
-        }
-
-        // If something exists at link path
-        if (File::exists($link) || is_link($link)) {
-            if (!$force) {
-                $this->warn("Exists: $link (use --force to replace). Skipping.");
-                return;
+            if (!File::exists($target)) {
+                $this->error("Target does not exist: $target");
+                $errorCount++;
+                continue;
             }
-            // Remove existing file/dir/symlink
-            if (is_link($link) || File::isFile($link)) {
-                File::delete($link);
-            } elseif (File::isDirectory($link)) {
-                File::deleteDirectory($link);
+
+            if (File::exists($link)) {
+                if (is_link($link)) {
+                    $existing = readlink($link);
+                    if ($existing === $target) {
+                        $this->info("Already linked: $link -> $target");
+                        $successCount++;
+                        continue;
+                    }
+
+                    if ($force) {
+                        $this->warn("Removing old link: $link -> $existing");
+                        unlink($link);
+                    } else {
+                        $this->warn("Link exists but points elsewhere: $link -> $existing");
+                        $this->warn("Use --force to replace it.");
+                        $errorCount++;
+                        continue;
+                    }
+                } else {
+                    $this->error("Path already exists and is not a symlink: $link");
+                    $errorCount++;
+                    continue;
+                }
+            }
+
+            $linkDir = dirname($link);
+            if (!File::isDirectory($linkDir)) {
+                File::makeDirectory($linkDir, 0755, true);
+            }
+
+            if (@symlink($target, $link)) {
+                $this->info("Created symlink: $link -> $target");
+                $successCount++;
+            } else {
+                $this->error("Failed to create symlink: $link -> $target");
+                $errorCount++;
             }
         }
 
-        if (@symlink($target, $link) === false) {
-            $this->error("Failed: symlink $link -> $target");
-            return;
-        }
+        $this->newLine();
+        $this->info("Finished: $successCount symlink(s) created/verified, $errorCount error(s).");
 
-        $this->info("Created: $link -> $target");
+        return ($errorCount > 0) ? 1 : 0;
     }
 }

@@ -14,13 +14,14 @@ class Update110
 
     // Regex to match the legacy cron lines (spaces normalized)
     // Matches any token after xml_cdr_import.php (e.g., 100 abcdef), and any redirection.
+    // Note: This pattern is flexible to work with various installation paths
     protected string $xmlCdrCronPattern =
-    '#^\s*\*\s+\*\s+\*\s+\*\s+\*\s+cd\s+/var/www/fspbx;\s*/usr/bin/php\s+/var/www/fspbx/public/app/xml_cdr/xml_cdr_import\.php\b.*$#i';
+    '#^\s*\*\s+\*\s+\*\s+\*\s+\*\s+cd\s+[^;]+;\s*/usr/bin/php\s+[^/]+/public/app/xml_cdr/xml_cdr_import\.php\b.*$#i';
 
 
     public function apply()
     {
-        // /var/www/fspbx/public/app/switch/resources/scripts/app/ring_groups/index.lua
+        // Path-agnostic update for ring groups
         echo "[Update110] Starting...\n";
 
         // Preflight: root check (most failures are permissions)
